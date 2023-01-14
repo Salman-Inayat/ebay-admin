@@ -21,6 +21,7 @@ import { getToken, deleteToken } from "src/store/localStorage";
 import { loadProfile } from "src/store/actions/authActions";
 import { useSelector, useDispatch } from "react-redux";
 import ViewUsers from "src/pages/ViewUsers";
+import Payments from "src/pages/Payments";
 
 // ----------------------------------------------------------------------
 
@@ -99,6 +100,14 @@ export default function Router() {
           element: (
             <LoggedInProtection redirectTo={"/"}>
               <ViewUsers />
+            </LoggedInProtection>
+          ),
+        },
+        {
+          path: "payments",
+          element: (
+            <LoggedInProtection redirectTo={"/"}>
+              <Payments />
             </LoggedInProtection>
           ),
         },

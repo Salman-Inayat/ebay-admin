@@ -17,8 +17,8 @@ const navConfig = [
     icon: getIcon("eva:people-fill"),
   },
   {
-    title: "billing",
-    path: "/dashboard/billing",
+    title: "payments",
+    path: "/dashboard/payments",
     icon: getIcon("eva:credit-card-fill"),
   },
 ];
