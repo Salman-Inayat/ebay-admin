@@ -58,109 +58,121 @@ const PaymentsSection = () => {
   };
 
   const handleUpdateSubscriptionPrice = async () => {
+    setLoading(true);
     try {
       await subscriptionInstance.post("/update-subscription-price", {
         price: newPrice,
       });
+      setLoading(false);
       setOpen(false);
       setNewPrice("");
+
+      fetchEarnings();
     } catch (error) {
       console.log(error);
     }
   };
 
+  const checkIfDetailsEmpty = () => {
+    if (Object.values(details).every((item) => item === 0)) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  if (loading && checkIfDetailsEmpty()) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "80%",
+          height: "80%",
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
-    <>
-      {loading ? (
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "80%",
-            height: "80%",
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : (
-        <Container maxWidth="xl">
+    <Container maxWidth="xl">
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={12}>
+          <Typography variant="h4" gutterBottom>
+            Payments
+          </Typography>
+        </Grid>
+        <Grid item xs={12} md={12}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={12}>
-              <Typography variant="h4" gutterBottom>
-                Payments
-              </Typography>
-            </Grid>
-            <Grid item xs={12} md={12}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={6}>
-                  <AppWidgetSummary
-                    title="Total earnings (USD)"
-                    total={details.totalEarnings}
-                    icon="eva:credit-card-fill"
-                    color="success"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <AppWidgetSummary
-                    title="Expected earnings (USD)"
-                    total={details.expectedEarnings}
-                    icon="eva:credit-card-fill"
-                    color="info"
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          <Grid container spacing={3} mt={5}>
             <Grid item xs={12} md={6}>
-              <Typography variant="h6" gutterBottom>
-                Subscription price
-              </Typography>
-
-              <Typography variant="body1" gutterBottom>
-                $10
-              </Typography>
+              <AppWidgetSummary
+                title="Total earnings (USD)"
+                total={details.totalEarnings}
+                icon="eva:credit-card-fill"
+                color="success"
+              />
             </Grid>
-
-            <Grid item xs={12} md={12}>
-              <Button variant="contained" onClick={() => setOpen(true)}>
-                Change subscription price
-              </Button>
+            <Grid item xs={12} md={6}>
+              <AppWidgetSummary
+                title="Expected earnings (USD)"
+                total={details.expectedEarnings}
+                icon="eva:credit-card-fill"
+                color="info"
+              />
             </Grid>
           </Grid>
+        </Grid>
+      </Grid>
 
-          <Dialog open={open} onClose={() => setOpen(false)}>
-            <DialogTitle>Change subscription price</DialogTitle>
-            <DialogContent>
-              <DialogContentText sx={{ mb: 3 }}>
-                Enter new price for subscription
-              </DialogContentText>
+      <Grid container spacing={3} mt={5}>
+        <Grid item xs={12} md={6}>
+          <Typography variant="h6" gutterBottom>
+            Subscription price
+          </Typography>
 
-              <TextField
-                label="New price"
-                type="number"
-                variant="outlined"
-                fullWidth
-                sx={{ mb: 3 }}
-                value={newPrice}
-                onChange={(e) => setNewPrice(e.target.value)}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setOpen(false)}>Cancel</Button>
-              <Button
-                onClick={handleUpdateSubscriptionPrice}
-                disabled={newPrice === undefined || newPrice === ""}
-              >
-                Confirm
-              </Button>
-            </DialogActions>
-          </Dialog>
-        </Container>
-      )}
-    </>
+          <Typography variant="body1" gutterBottom>
+            $ {details.subscriptionPrice}
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12} md={12}>
+          <Button variant="contained" onClick={() => setOpen(true)}>
+            Change subscription price
+          </Button>
+        </Grid>
+      </Grid>
+
+      <Dialog open={open} onClose={() => setOpen(false)}>
+        <DialogTitle>Change subscription price</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ mb: 3 }}>
+            Enter new price for subscription
+          </DialogContentText>
+
+          <TextField
+            label="New price"
+            type="number"
+            variant="outlined"
+            fullWidth
+            sx={{ mb: 3 }}
+            value={newPrice}
+            onChange={(e) => setNewPrice(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button
+            onClick={handleUpdateSubscriptionPrice}
+            disabled={newPrice === undefined || newPrice === ""}
+          >
+            {loading ? <CircularProgress size={20} /> : "Update"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
 };
 

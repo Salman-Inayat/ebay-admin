@@ -25,8 +25,8 @@ export default function Logo({ disabledLink = false, sx }) {
   const logo1 = (
     <Box
       component="img"
-      src="/favicon/logo1.svg"
-      sx={{ width: 210, height: 40, objectFit: "cover" }}
+      src="/favicon/logo1.png"
+      sx={{ width: 210, height: 70, objectFit: "contain" }}
     />
   );
 
