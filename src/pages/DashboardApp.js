@@ -49,7 +49,7 @@ export default function DashboardApp() {
               Hi, Welcome back
             </Typography>
 
-            <Grid container spacing={3}>
+            {/* <Grid container spacing={3}>
               <Grid
                 item
                 xs={12}
@@ -128,7 +128,7 @@ export default function DashboardApp() {
                   icon="bx:category"
                 />
               </Grid>
-            </Grid>
+            </Grid> */}
           </Container>
         </Page>
       )}
