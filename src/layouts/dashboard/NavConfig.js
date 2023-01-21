@@ -21,6 +21,11 @@ const navConfig = [
     path: "/dashboard/payments",
     icon: getIcon("eva:credit-card-fill"),
   },
+  {
+    title: "posts",
+    path: "/dashboard/posts",
+    icon: getIcon("eva:file-text-fill"),
+  },
 ];
 
 export default navConfig;

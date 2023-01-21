@@ -22,6 +22,7 @@ import { loadProfile } from "src/store/actions/authActions";
 import { useSelector, useDispatch } from "react-redux";
 import ViewUsers from "src/pages/ViewUsers";
 import Payments from "src/pages/Payments";
+import Posts from "src/pages/Posts";
 
 // ----------------------------------------------------------------------
 
@@ -108,6 +109,14 @@ export default function Router() {
           element: (
             <LoggedInProtection redirectTo={"/"}>
               <Payments />
+            </LoggedInProtection>
+          ),
+        },
+        {
+          path: "posts",
+          element: (
+            <LoggedInProtection redirectTo={"/"}>
+              <Posts />
             </LoggedInProtection>
           ),
         },
