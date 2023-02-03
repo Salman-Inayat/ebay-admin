@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import subscriptionInstance from "src/axios/subscriptionInstance";
 import CircularProgress from "@mui/material/CircularProgress";
-import { AppWidgetSummary } from "../@dashboard/app";
+import AppWidgetSummary from "../../components/AppWidgetSummary";
 
 // ----------------------------------------------------------------------
 

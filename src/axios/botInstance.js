@@ -1,10 +1,10 @@
 import axios from "axios";
 import { getToken } from "src/store/localStorage";
-const dashboardInstance = axios.create({
-  baseURL: `${process.env.REACT_APP_DEV_API_URL}/api/dashboard`,
+const botInstance = axios.create({
+  baseURL: `${process.env.REACT_APP_DEV_API_URL}/bot`,
 });
 
-dashboardInstance.interceptors.request.use(
+botInstance.interceptors.request.use(
   async (config) => {
     config.headers = {
       Authorization: `Bearer ${getToken()}`,
@@ -16,4 +16,4 @@ dashboardInstance.interceptors.request.use(
   }
 );
 
-export default dashboardInstance;
+export default botInstance;
