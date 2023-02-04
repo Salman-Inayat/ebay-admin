@@ -25,8 +25,8 @@ export default function Logo({ disabledLink = false, sx }) {
   const logo1 = (
     <Box
       component="img"
-      src="/favicon/logo1.png"
-      sx={{ width: 210, height: 70, objectFit: "contain" }}
+      src="/favicon/Smart-Dropper.png"
+      sx={{ width: "100%", height: "100px", objectFit: "contain" }}
     />
   );
 
