@@ -324,11 +324,11 @@ function DashboardSection() {
                     options={[]}
                     freeSolo
                     onChange={(event, newValue) => {
-                      if (newValue.length > 5) {
+                      if (newValue.length > 20) {
                         setEnteredSellers((prev) => {
                           return {
                             ...prev,
-                            error: "You can only enter 5 sellers",
+                            error: "You can only enter a maximum of 20 sellers",
                           };
                         });
                       } else {
