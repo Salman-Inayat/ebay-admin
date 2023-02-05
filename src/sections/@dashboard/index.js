@@ -358,6 +358,13 @@ function DashboardSection() {
                   />
                 </Grid>
 
+                <Grid item md={12}>
+                  {enteredSellers.error && (
+                    <Typography variant="body2" color="error">
+                      {enteredSellers.error}
+                    </Typography>
+                  )}
+                </Grid>
                 <Grid item md={12} sm={12}>
                   <LoadingButton
                     variant="contained"
@@ -374,13 +381,6 @@ function DashboardSection() {
                   >
                     Scan
                   </LoadingButton>
-                </Grid>
-                <Grid item md={12}>
-                  {enteredSellers.error && (
-                    <Typography variant="body2" color="error">
-                      {enteredSellers.error}
-                    </Typography>
-                  )}
                 </Grid>
               </Grid>
             </Grid>
