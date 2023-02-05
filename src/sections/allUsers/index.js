@@ -14,19 +14,24 @@ import {
 } from "@mui/material";
 import userInstance from "src/axios/userInstance";
 import UsersTable from "src/components/tables/usersTable";
+import useSWR from "swr";
+import Loader from "src/components/Loader";
 
 const UsersViewSection = () => {
-  const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // const [users, setUsers] = useState([]);
 
   const fetchUsers = async () => {
     const response = await userInstance.get("/all");
     console.log("Users: ", response.data);
-    setUsers(response.data.users);
+    return response.data.users;
   };
+
+  const { data: users, isLoading } = useSWR(
+    "admin -fetch all users",
+    fetchUsers
+  );
+
+  if (isLoading) return <Loader />;
 
   return (
     <Box

@@ -57,7 +57,7 @@ export default function Router() {
         {
           path: "login",
           element: (
-            <LoggedOutProtection redirectTo={"/dashboard/bots"}>
+            <LoggedOutProtection redirectTo={"/dashboard"}>
               <Login />
             </LoggedOutProtection>
           ),
@@ -66,7 +66,7 @@ export default function Router() {
         {
           path: "forgot-password",
           element: (
-            <LoggedOutProtection redirectTo={"/dashboard/bots"}>
+            <LoggedOutProtection redirectTo={"/dashboard"}>
               <ForgotPassword />
             </LoggedOutProtection>
           ),
@@ -89,7 +89,7 @@ export default function Router() {
       ),
       children: [
         {
-          path: "bots",
+          path: "",
           element: (
             <LoggedInProtection redirectTo={"/"}>
               <DashboardApp />

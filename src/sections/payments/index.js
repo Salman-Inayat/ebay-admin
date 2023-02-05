@@ -14,48 +14,37 @@ import {
   DialogContentText,
 } from "@mui/material";
 
-import { useSelector, useDispatch } from "react-redux";
-
-import { signOut } from "src/store/actions/authActions";
-
-import { useNavigate } from "react-router-dom";
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import subscriptionInstance from "src/axios/subscriptionInstance";
 import CircularProgress from "@mui/material/CircularProgress";
 import AppWidgetSummary from "../../components/AppWidgetSummary";
 
-// ----------------------------------------------------------------------
+import useSWR, { mutate } from "swr";
+import Loader from "src/components/Loader";
 
 const PaymentsSection = () => {
-  const [details, setDetails] = useState({
-    totalEarnings: 0,
-    expectedEarnings: 0,
-    subscriptionPrice: 0,
-  });
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   const [newPrice, setNewPrice] = useState();
 
-  useEffect(() => {
-    fetchEarnings();
-  }, []);
-
   const fetchEarnings = async () => {
-    try {
-      setLoading(true);
-      const response = await subscriptionInstance.get("/earnings");
-      setDetails({
-        totalEarnings: response.data.totalEarnings,
-        expectedEarnings: response.data.expectedEarnings,
-        subscriptionPrice: response.data.subscriptionPrice,
-      });
-      setLoading(false);
-    } catch (error) {
-      console.log(error);
-    }
+    const response = await subscriptionInstance.get("/earnings");
+    return {
+      totalEarnings: response.data.totalEarnings,
+      expectedEarnings: response.data.expectedEarnings,
+      subscriptionPrice: response.data.subscriptionPrice,
+    };
   };
+
+  const { data, isLoading } = useSWR(
+    "admin/fetchPaymentDetails",
+    fetchEarnings
+  );
+
+  if (isLoading) return <Loader />;
+
+  const { totalEarnings, expectedEarnings, subscriptionPrice } = data;
 
   const handleUpdateSubscriptionPrice = async () => {
     setLoading(true);
@@ -67,35 +56,11 @@ const PaymentsSection = () => {
       setOpen(false);
       setNewPrice("");
 
-      fetchEarnings();
+      mutate("admin/fetchPaymentDetails");
     } catch (error) {
       console.log(error);
     }
   };
-
-  const checkIfDetailsEmpty = () => {
-    if (Object.values(details).every((item) => item === 0)) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  if (loading && checkIfDetailsEmpty()) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          width: "80%",
-          height: "80%",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Container maxWidth="xl">
@@ -110,7 +75,7 @@ const PaymentsSection = () => {
             <Grid item xs={12} md={6}>
               <AppWidgetSummary
                 title="Total earnings (USD)"
-                total={details.totalEarnings}
+                total={totalEarnings}
                 icon="eva:credit-card-fill"
                 color="success"
               />
@@ -118,7 +83,7 @@ const PaymentsSection = () => {
             <Grid item xs={12} md={6}>
               <AppWidgetSummary
                 title="Expected earnings (USD)"
-                total={details.expectedEarnings}
+                total={expectedEarnings}
                 icon="eva:credit-card-fill"
                 color="info"
               />
@@ -134,7 +99,7 @@ const PaymentsSection = () => {
           </Typography>
 
           <Typography variant="body1" gutterBottom>
-            $ {details.subscriptionPrice}
+            $ {subscriptionPrice}
           </Typography>
         </Grid>
 
