@@ -18,8 +18,6 @@ import useSWR from "swr";
 import Loader from "src/components/Loader";
 
 const UsersViewSection = () => {
-  // const [users, setUsers] = useState([]);
-
   const fetchUsers = async () => {
     const response = await userInstance.get("/all");
     console.log("Users: ", response.data);
@@ -41,15 +39,16 @@ const UsersViewSection = () => {
         backgroundColor: "#ededed",
         flex: 1,
         borderRadius: "1rem",
+        padding: "1rem",
       }}
     >
       <Grid container py={7} px={4} spacing={3}>
-        <Grid item md={12} display="flex" justifyContent="center">
+        <Grid item md={12} xs={12} display="flex" justifyContent="center">
           <Typography variant="h4" fontWeight="bold">
             All Users
           </Typography>
         </Grid>
-        <Grid item md={12} display="flex" justifyContent="center">
+        <Grid item md={12} xs={12} display="flex" justifyContent="center">
           <UsersTable users={users} fetchUsers={fetchUsers} />
         </Grid>
       </Grid>
