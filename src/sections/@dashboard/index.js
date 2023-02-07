@@ -13,6 +13,7 @@ import {
   CircularProgress,
   MenuItem,
   Button,
+  Stack,
 } from "@mui/material";
 import botInstance from "src/axios/botInstance";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
@@ -24,7 +25,17 @@ import dashboardInstance from "src/axios/dashboardInstance";
 import AppWidgetSummary from "src/components/AppWidgetSummary";
 import Loader from "src/components/Loader";
 
+import { css } from '@emotion/css';
+import ScrollToBottom from 'react-scroll-to-bottom';
+
+
 import Logger from "./logger";
+
+const ROOT_CSS = css({
+  height: 600,
+  width: "100%"
+});
+
 
 const regions = [
   {
@@ -148,6 +159,9 @@ function DashboardSection() {
   const { totalProducts, totalSellers } = data;
 
   const handleKeywordSearch = async () => {
+
+    setKeywordsResponse([])
+
     const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
     const eventSource = new EventSource(
       `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
@@ -157,40 +171,17 @@ function DashboardSection() {
       const progress = event.data;
       console.log(`${progress}`);
 
-      setKeywordsResponse((prevState) => [...prevState, progress]);
+      setKeywordsResponse((prevState) => [...prevState, {
+        time: new Date().toLocaleTimeString(),
+        log: progress
+      }]);
+
+      if (
+        progress === "Scraping finished"
+      ){
+        eventSource.close()
+      }
     };
-
-    // const data = {
-    //   keyword: keywordSearch.keyword,
-    //   regionGlobalID: keywordSearch.region,
-    // };
-
-    // try {
-    //   const response = await botInstance.post(`/scrap-keyword-products`, data);
-    //   // console.log("Sellers: ", response.data.sellers);
-
-    //   // if (response.data.sellers.length > 0) {
-    //   //   setSellers(response.data.sellers);
-
-    //   //   toast.success(response.data.message, {
-    //   //     position: "bottom-center",
-    //   //     autoClose: 3000,
-    //   //     closeOnClick: true,
-    //   //     pauseOnHover: true,
-    //   //   });
-    //   // } else {
-    //   //   toast.error("No sellers found for this keyword", {
-    //   //     position: "bottom-center",
-    //   //     autoClose: 3000,
-    //   //     closeOnClick: true,
-    //   //     pauseOnHover: true,
-    //   //   });
-    //   // }
-    // } catch (error) {
-    //   console.error(error);
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   const handleProductsSearchBySellers = async () => {
@@ -210,52 +201,39 @@ function DashboardSection() {
     }
   };
 
-  const renderScannedSellers = () => {
-    return (
-      sellers.length > 0 && (
-        <Grid item xs={12} mt={3}>
-          <Typography variant="h6" gutterBottom>
-            Scanned Sellers
-          </Typography>
-          <List>
-            {sellers?.map((seller) => (
-              <Chip
-                label={seller}
-                sx={{
-                  margin: "0.2rem",
-                }}
-              />
-            ))}
-          </List>
-        </Grid>
-      )
-    );
-  };
-
   const renderKeywordsResponse = () => {
     return (
       <Grid
         container
         spacing={2}
-        sx={{
-          border: "1px solid gray",
-          borderRadius: "0.2rem",
-          height: "100vh",
-          overflowY: "scroll",
-        }}
+        p={2}
       >
-        <Grid item xs={12}>
-          <Typography variant="h6" gutterBottom>
-            Keywords Response
-          </Typography>
+        <Grid item xs={12} md={12} sm={12} sx={{
+          border: "2px solid gray",
+          borderRadius: "0.5rem",
 
-          {keywordsResponse.map((response) => {
-            return (
-              <Typography variant="body2" gutterBottom>
-                {response}
-              </Typography>
-            );
-          })}
+        }}>
+          <ScrollToBottom className={ROOT_CSS}>
+            {keywordsResponse.map((response) => {
+              return (
+                <Grid container spacing={2}>
+                  <Grid item md={2} sm={2} xs={2}>
+                    <Typography variant="body2" gutterBottom>
+                      {
+                        response.time
+                      }
+                    </Typography>
+
+                  </Grid>
+                  <Grid item md={10} sm={10} xs={10}>
+                    <Typography variant="body2" gutterBottom>
+                      {response.log}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              );
+            })}
+          </ScrollToBottom>
         </Grid>
       </Grid>
     );
@@ -286,7 +264,7 @@ function DashboardSection() {
         </Grid>
         <Grid item xs={12} md={6} lg={6}>
           <Grid container spacing={2}>
-            <Grid item md={12} sm={12}>
+            <Grid item md={12} sm={12} xs={12}>
               <Typography variant="body1">Scan by keywords</Typography>
             </Grid>
             <Grid item md={12} sm={12} xs={12}>
@@ -346,10 +324,6 @@ function DashboardSection() {
               >
                 Scan
               </LoadingButton>
-            </Grid>
-            <Grid item md={12} sm={12} xs={12}>
-              {/* {renderScannedSellers()} */}
-              {renderKeywordsResponse()}
             </Grid>
           </Grid>
         </Grid>
@@ -431,6 +405,12 @@ function DashboardSection() {
             </Grid>
           </Grid>
         </Grid>
+
+        <Grid item md={12} lg={12} sm={12} xs={12}>
+              {
+                keywordsResponse.length > 0 && renderKeywordsResponse()
+              }
+            </Grid>
       </Grid>
     </Container>
   );
