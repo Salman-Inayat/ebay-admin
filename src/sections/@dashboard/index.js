@@ -148,11 +148,9 @@ function DashboardSection() {
   const { totalProducts, totalSellers } = data;
 
   const handleKeywordSearch = async () => {
-    // setLoading(true);
-
     const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
     const eventSource = new EventSource(
-      `http://localhost:3005/api/v1/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
+      `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
     );
 
     eventSource.onmessage = (event) => {
