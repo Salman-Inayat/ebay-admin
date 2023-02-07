@@ -12,6 +12,7 @@ import {
   Chip,
   CircularProgress,
   MenuItem,
+  Button,
 } from "@mui/material";
 import botInstance from "src/axios/botInstance";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
@@ -22,6 +23,8 @@ import useSWR from "swr";
 import dashboardInstance from "src/axios/dashboardInstance";
 import AppWidgetSummary from "src/components/AppWidgetSummary";
 import Loader from "src/components/Loader";
+
+import Logger from "./logger";
 
 const regions = [
   {
@@ -123,6 +126,8 @@ function DashboardSection() {
   const [loading, setLoading] = useState(false);
   const [sellers, setSellers] = useState([]);
 
+  const [keywordsResponse, setKeywordsResponse] = useState([]);
+
   const fetchDashboardData = async () => {
     const response = await dashboardInstance.get("/admin");
     return {
@@ -143,39 +148,51 @@ function DashboardSection() {
   const { totalProducts, totalSellers } = data;
 
   const handleKeywordSearch = async () => {
-    setLoading(true);
+    // setLoading(true);
 
-    const data = {
-      keyword: keywordSearch.keyword,
-      regionGlobalID: keywordSearch.region,
+    const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
+    const eventSource = new EventSource(
+      `http://localhost:3005/api/v1/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
+    );
+
+    eventSource.onmessage = (event) => {
+      const progress = event.data;
+      console.log(`${progress}`);
+
+      setKeywordsResponse((prevState) => [...prevState, progress]);
     };
 
-    try {
-      const response = await botInstance.post(`/scrap-keyword-products`, data);
-      console.log("Sellers: ", response.data.sellers);
+    // const data = {
+    //   keyword: keywordSearch.keyword,
+    //   regionGlobalID: keywordSearch.region,
+    // };
 
-      if (response.data.sellers.length > 0) {
-        setSellers(response.data.sellers);
+    // try {
+    //   const response = await botInstance.post(`/scrap-keyword-products`, data);
+    //   // console.log("Sellers: ", response.data.sellers);
 
-        toast.success(response.data.message, {
-          position: "bottom-center",
-          autoClose: 3000,
-          closeOnClick: true,
-          pauseOnHover: true,
-        });
-      } else {
-        toast.error("No sellers found for this keyword", {
-          position: "bottom-center",
-          autoClose: 3000,
-          closeOnClick: true,
-          pauseOnHover: true,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+    //   // if (response.data.sellers.length > 0) {
+    //   //   setSellers(response.data.sellers);
+
+    //   //   toast.success(response.data.message, {
+    //   //     position: "bottom-center",
+    //   //     autoClose: 3000,
+    //   //     closeOnClick: true,
+    //   //     pauseOnHover: true,
+    //   //   });
+    //   // } else {
+    //   //   toast.error("No sellers found for this keyword", {
+    //   //     position: "bottom-center",
+    //   //     autoClose: 3000,
+    //   //     closeOnClick: true,
+    //   //     pauseOnHover: true,
+    //   //   });
+    //   // }
+    // } catch (error) {
+    //   console.error(error);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const handleProductsSearchBySellers = async () => {
@@ -214,6 +231,35 @@ function DashboardSection() {
           </List>
         </Grid>
       )
+    );
+  };
+
+  const renderKeywordsResponse = () => {
+    return (
+      <Grid
+        container
+        spacing={2}
+        sx={{
+          border: "1px solid gray",
+          borderRadius: "0.2rem",
+          height: "100vh",
+          overflowY: "scroll",
+        }}
+      >
+        <Grid item xs={12}>
+          <Typography variant="h6" gutterBottom>
+            Keywords Response
+          </Typography>
+
+          {keywordsResponse.map((response) => {
+            return (
+              <Typography variant="body2" gutterBottom>
+                {response}
+              </Typography>
+            );
+          })}
+        </Grid>
+      </Grid>
     );
   };
 
@@ -304,7 +350,8 @@ function DashboardSection() {
               </LoadingButton>
             </Grid>
             <Grid item md={12} sm={12} xs={12}>
-              {renderScannedSellers()}
+              {/* {renderScannedSellers()} */}
+              {renderKeywordsResponse()}
             </Grid>
           </Grid>
         </Grid>
