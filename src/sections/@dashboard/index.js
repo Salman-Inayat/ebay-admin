@@ -25,17 +25,17 @@ import dashboardInstance from "src/axios/dashboardInstance";
 import AppWidgetSummary from "src/components/AppWidgetSummary";
 import Loader from "src/components/Loader";
 
-import { css } from '@emotion/css';
-import ScrollToBottom from 'react-scroll-to-bottom';
+import { css } from "@emotion/css";
+import ScrollToBottom from "react-scroll-to-bottom";
 
+import { fetchEventSource } from "@microsoft/fetch-event-source";
 
-import Logger from "./logger";
+import { getToken } from "src/store/localStorage";
 
 const ROOT_CSS = css({
   height: 600,
-  width: "100%"
+  width: "100%",
 });
-
 
 const regions = [
   {
@@ -135,7 +135,6 @@ function DashboardSection() {
     error: "",
   });
   const [loading, setLoading] = useState(false);
-  const [sellers, setSellers] = useState([]);
 
   const [keywordsResponse, setKeywordsResponse] = useState([]);
 
@@ -159,71 +158,148 @@ function DashboardSection() {
   const { totalProducts, totalSellers } = data;
 
   const handleKeywordSearch = async () => {
+    setKeywordsResponse([]);
 
-    setKeywordsResponse([])
+    // const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
+    // const eventSource = new EventSource(
+    //   `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
+    // );
 
-    const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
-    const eventSource = new EventSource(
-      `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
-    );
+    // eventSource.onmessage = (event) => {
+    //   const progress = event.data;
+    //   console.log(`${progress}`);
 
-    eventSource.onmessage = (event) => {
-      const progress = event.data;
-      console.log(`${progress}`);
+    //   setKeywordsResponse((prevState) => [
+    //     ...prevState,
+    //     {
+    //       time: new Date().toLocaleTimeString(),
+    //       log: progress,
+    //     },
+    //   ]);
 
-      setKeywordsResponse((prevState) => [...prevState, {
-        time: new Date().toLocaleTimeString(),
-        log: progress
-      }]);
+    //   if (progress === "Scraping finished") {
+    //     eventSource.close();
+    //   }
+    // };
 
-      if (
-        progress === "Scraping finished"
-      ){
-        eventSource.close()
+    const ctrl = new AbortController();
+
+    await fetchEventSource(
+      `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          keyword: keywordSearch.keyword,
+          regionGlobalID: keywordSearch.region,
+        }),
+        signal: ctrl.signal,
+
+        onopen(res) {
+          if (res.ok && res.status === 200) {
+            console.log("Connection made ");
+          } else if (
+            res.status >= 400 &&
+            res.status < 500 &&
+            res.status !== 429
+          ) {
+            console.log("Client side error ", res);
+          }
+        },
+        onmessage(ev) {
+          const progress = ev.data;
+
+          console.log({ progress });
+
+          setKeywordsResponse((prevState) => [
+            ...prevState,
+            {
+              time: new Date().toLocaleTimeString(),
+              log: progress,
+            },
+          ]);
+
+          if (progress === "Scraping finished") {
+            ctrl.abort();
+          }
+        },
       }
-    };
+    );
   };
 
   const handleProductsSearchBySellers = async () => {
-    try {
-      const response = await botInstance.post(`/scrap-products-from-sellers`, {
-        sellers: enteredSellers.sellers,
-      });
+    setKeywordsResponse([]);
 
-      toast.success(response.data.message, {
-        position: "bottom-center",
-        autoClose: 3000,
-        closeOnClick: true,
-        pauseOnHover: true,
-      });
-    } catch (error) {
-      console.error(error);
-    }
+    const ctrl = new AbortController();
+
+    await fetchEventSource(
+      `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-products-from-sellers`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          sellers: enteredSellers.sellers,
+        }),
+        signal: ctrl.signal,
+
+        onopen(res) {
+          if (res.ok && res.status === 200) {
+            console.log("Connection made ");
+          } else if (
+            res.status >= 400 &&
+            res.status < 500 &&
+            res.status !== 429
+          ) {
+            console.log("Client side error ", res);
+          }
+        },
+
+        onmessage(ev) {
+          const progress = ev.data;
+
+          setKeywordsResponse((prevState) => [
+            ...prevState,
+            {
+              time: new Date().toLocaleTimeString(),
+              log: progress,
+            },
+          ]);
+
+          if (progress === "Scraping finished") {
+            ctrl.abort();
+          }
+        },
+      }
+    );
   };
 
   const renderKeywordsResponse = () => {
     return (
-      <Grid
-        container
-        spacing={2}
-        p={2}
-      >
-        <Grid item xs={12} md={12} sm={12} sx={{
-          border: "2px solid gray",
-          borderRadius: "0.5rem",
-
-        }}>
+      <Grid container spacing={2} p={2}>
+        <Grid
+          item
+          xs={12}
+          md={12}
+          sm={12}
+          sx={{
+            border: "2px solid gray",
+            borderRadius: "0.5rem",
+          }}
+        >
           <ScrollToBottom className={ROOT_CSS}>
             {keywordsResponse.map((response) => {
               return (
                 <Grid container spacing={2}>
                   <Grid item md={2} sm={2} xs={2}>
                     <Typography variant="body2" gutterBottom>
-                      {
-                        response.time
-                      }
+                      {response.time}
                     </Typography>
-
                   </Grid>
                   <Grid item md={10} sm={10} xs={10}>
                     <Typography variant="body2" gutterBottom>
@@ -407,10 +483,8 @@ function DashboardSection() {
         </Grid>
 
         <Grid item md={12} lg={12} sm={12} xs={12}>
-              {
-                keywordsResponse.length > 0 && renderKeywordsResponse()
-              }
-            </Grid>
+          {keywordsResponse.length > 0 && renderKeywordsResponse()}
+        </Grid>
       </Grid>
     </Container>
   );
