@@ -4,20 +4,9 @@ import {
   Container,
   Typography,
   TextField,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Autocomplete,
-  Chip,
-  CircularProgress,
   MenuItem,
   Button,
-  Stack,
 } from "@mui/material";
-import botInstance from "src/axios/botInstance";
-import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import { toast } from "react-toastify";
 import { LoadingButton } from "@mui/lab";
 
 import useSWR from "swr";
@@ -130,11 +119,11 @@ function DashboardSection() {
     error: "",
     region: "",
   });
-  const [enteredSellers, setEnteredSellers] = useState({
-    sellers: [],
-    error: "",
-  });
-  const [loading, setLoading] = useState(false);
+
+  const [sellersFile, setSellersFile] = useState(null);
+  const [keywordSearchLoading, setKeywordSearchLoading] = useState(false);
+  const [sellersFileUploadLoading, setSellersFileUploadLoading] =
+    useState(false);
 
   const [keywordsResponse, setKeywordsResponse] = useState([]);
 
@@ -159,28 +148,7 @@ function DashboardSection() {
 
   const handleKeywordSearch = async () => {
     setKeywordsResponse([]);
-
-    // const keyword = keywordSearch.keyword.toLowerCase().replaceAll(" ", "-");
-    // const eventSource = new EventSource(
-    //   `${process.env.REACT_APP_DEV_API_URL}/bot/scrap-keyword-products?keyword=${keyword}&regionGlobalID=${keywordSearch.region}`
-    // );
-
-    // eventSource.onmessage = (event) => {
-    //   const progress = event.data;
-    //   console.log(`${progress}`);
-
-    //   setKeywordsResponse((prevState) => [
-    //     ...prevState,
-    //     {
-    //       time: new Date().toLocaleTimeString(),
-    //       log: progress,
-    //     },
-    //   ]);
-
-    //   if (progress === "Scraping finished") {
-    //     eventSource.close();
-    //   }
-    // };
+    setKeywordSearchLoading(true);
 
     const ctrl = new AbortController();
 
@@ -224,14 +192,26 @@ function DashboardSection() {
 
           if (progress === "Scraping finished") {
             ctrl.abort();
+            setKeywordSearchLoading(false);
           }
         },
       }
     );
   };
 
-  const handleProductsSearchBySellers = async () => {
+  const handleSellersFileUpload = async (e) => {
+    const file = e.target.files[0];
+
+    setSellersFile(file);
+  };
+
+  const handleSellersFileUploadSubmit = async () => {
     setKeywordsResponse([]);
+
+    setSellersFileUploadLoading(true);
+
+    const formData = new FormData();
+    formData.append("file", sellersFile);
 
     const ctrl = new AbortController();
 
@@ -240,12 +220,9 @@ function DashboardSection() {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${getToken()}`,
         },
-        body: JSON.stringify({
-          sellers: enteredSellers.sellers,
-        }),
+        body: formData,
         signal: ctrl.signal,
 
         onopen(res) {
@@ -273,6 +250,7 @@ function DashboardSection() {
 
           if (progress === "Scraping finished") {
             ctrl.abort();
+            setSellersFileUploadLoading(false);
           }
         },
       }
@@ -394,9 +372,10 @@ function DashboardSection() {
                 }}
                 disabled={
                   keywordSearch.keyword.length === 0 ||
-                  keywordSearch.region.length === 0
+                  keywordSearch.region.length === 0 ||
+                  sellersFileUploadLoading
                 }
-                loading={loading}
+                loading={keywordSearchLoading}
               >
                 Scan
               </LoadingButton>
@@ -412,52 +391,22 @@ function DashboardSection() {
             <Grid item md={12} sm={12}>
               <Grid container spacing={2}>
                 <Grid item md={12} sm={12}>
-                  <Autocomplete
-                    multiple
-                    fullWidth
-                    id="tags-filled"
-                    options={[]}
-                    freeSolo
-                    onChange={(event, newValue) => {
-                      if (newValue.length > 20) {
-                        setEnteredSellers((prev) => {
-                          return {
-                            ...prev,
-                            error: "You can only enter a maximum of 20 sellers",
-                          };
-                        });
-                      } else {
-                        setEnteredSellers({
-                          sellers: newValue,
-                          error: "",
-                        });
-                      }
-                    }}
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => (
-                        <Chip
-                          variant="outlined"
-                          label={option}
-                          {...getTagProps({ index })}
-                        />
-                      ))
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="outlined"
-                        label="Enter seller names"
-                        size="small"
-                      />
-                    )}
-                  />
-                </Grid>
+                  <Button variant="contained" component="label" fullWidth>
+                    Upload sellers file
+                    <input
+                      hidden
+                      accept="application/JSON"
+                      multiple
+                      type="file"
+                      onChange={(e) => {
+                        handleSellersFileUpload(e);
+                        console.log(e.target.files[0]);
+                      }}
+                    />
+                  </Button>
 
-                <Grid item md={12}>
-                  {enteredSellers.error && (
-                    <Typography variant="body2" color="error">
-                      {enteredSellers.error}
-                    </Typography>
+                  {sellersFile && (
+                    <Typography variant="body2">{sellersFile.name}</Typography>
                   )}
                 </Grid>
                 <Grid item md={12} sm={12}>
@@ -467,12 +416,15 @@ function DashboardSection() {
                     sx={{ width: "100px" }}
                     size="small"
                     onClick={() => {
-                      handleProductsSearchBySellers();
+                      handleSellersFileUploadSubmit();
                     }}
                     disabled={
-                      enteredSellers.sellers.length === 0 ||
-                      enteredSellers.error !== ""
+                      sellersFile === null ||
+                      sellersFile === undefined ||
+                      sellersFile === "" ||
+                      keywordSearchLoading
                     }
+                    loading={sellersFileUploadLoading}
                   >
                     Scan
                   </LoadingButton>
