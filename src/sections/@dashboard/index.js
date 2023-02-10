@@ -137,7 +137,10 @@ function DashboardSection() {
 
   const { data, error, isLoading } = useSWR(
     "/admin-dashboard",
-    fetchDashboardData
+    fetchDashboardData,
+    {
+      revalidateOnFocus: false,
+    }
   );
 
   if (error) return <div>failed to load</div>;
